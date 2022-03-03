@@ -1,4 +1,7 @@
+import json
 from dataclasses import dataclass, fields
+
+import requests
 
 APIKEY = ""
 try:
@@ -12,13 +15,21 @@ DOMAIN = {
     'fleet_size': [1000, 10000, 30000],
     'mean_dvmt': [25, 35, 45],
     'pev_dist': ['BEV', 'PHEV', 'EQUAL'],
-    'class_dist': [20, 50, 80],  # TODO: SUV, Equal, Sedan
-    'pref_dist': [60, 80, 100],  # TODO: Home60, Home80, Home100
-    'home_access_dist': [60, 80, 100],  # TODO: HA50, HA75, HA100
-    'home_power_dist': [20, 50, 80],  # TODO: MostL2, Equal, MostL1
-    'work_power_dist': [20, 50, 80],  # TODO: same as up
+    'class_dist': [20, 50, 80],
+    'pref_dist': [60, 80, 100],
+    'home_access_dist': [50, 75, 100],
+    'home_power_dist': [20, 50, 80],
+    'work_power_dist': [20, 50, 80],
     'res_charging': ['min_delay', 'max_delay', 'timed_charging', 'load_leveling'],
     'work_charging': ['min_delay', 'max_delay', 'load_leveling']
+}
+
+ENCODED_DOMAIN = {
+    'class_dist': {20: 'SUV', 50: 'Equal', 80: 'Sedan'},
+    'pref_dist': {60: 'Home60', 80: 'Home80', 100: 'Home100'},
+    'home_access_dist': {50: 'HA50', 75: 'HA75', 100: 'HA100'},
+    'home_power_dist': {20: 'MostL2', 50: 'Equal', 80: 'MostL1'},
+    'work_power_dist': {20: 'MostL2', 50: 'Equal', 80: 'MostL1'}
 }
 
 
@@ -57,8 +68,31 @@ class Query:
 
         return ret
 
+    def encode_args(self) -> dict:  # TODO: ensure that args lay *in* domain
+        ret = dict()
+        for field in fields(Query):
+            field_name = field.name
+            val = getattr(self, field_name)
+
+            if field_name not in ENCODED_DOMAIN:
+                ret[field_name] = val
+                continue
+
+            ret[field_name] = ENCODED_DOMAIN[field_name][val]
+
+        return ret
+
+
+def query_nrel(d: dict):
+    base_url = f"https://developer.nrel.gov/api/evi-pro-lite/v1/daily-load-profile?api_key={APIKEY}&"
+    url = f'{base_url}{"&".join(f"{k}={v}" for k, v in d.items())}'
+    record_str = requests.get(url).text
+    record_str = record_str.replace("'", "\"")
+    raw_json = json.loads(record_str)
+    print(raw_json)
+
 
 if __name__ == "__main__":
-    args = [23, 1004, 29, 'BEV', 23, 81, 68, 21, 21, 'load_leveling', 'load_leveling']
+    args = [v[0] for v in DOMAIN.values()]
     q = Query(*args)
-    print(q.neighbors())
+    query_nrel(q.encode_args())
