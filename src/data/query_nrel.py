@@ -24,7 +24,7 @@ import requests
 
 APIKEY = ""
 try:
-    with open('key.txt') as fin:
+    with open('../../key.txt') as fin:
         APIKEY = fin.read().strip()
 except FileNotFoundError:
     APIKEY = 'DEMO_KEY'
