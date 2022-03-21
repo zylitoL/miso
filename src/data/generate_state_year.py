@@ -26,9 +26,7 @@ def main(raw_filepath, interim_filepath, output_filepath):
         df['Year'] = df['Year'].astype(int)
         dfs.append(df)
 
-    station_df = pd.read_csv(f'{prefix[STATION_DIRECTORY]}/{STATION_FILE_NAME}')
-    station_df = station_df.set_index(['State', 'Year'])
-    dfs.append(station_df)
+    dfs.append(pd.read_csv(f'{prefix[STATION_DIRECTORY]}/{STATION_FILE_NAME}'))
 
     socioeconomic_df = reduce(lambda x, y: pd.merge(x, y, how='outer', on=['State', 'Year']), dfs)
     socioeconomic_df = socioeconomic_df.set_index(['State', 'Year'])
