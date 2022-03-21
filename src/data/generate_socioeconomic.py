@@ -1,4 +1,3 @@
-import csv
 from functools import reduce
 
 import pandas as pd
@@ -12,34 +11,15 @@ FILE_NAMES = ['gasoline_price.csv', 'income.csv', 'populations.csv', 'renewable_
               'transportation_energy_use.csv']
 
 
-def generate_records(file_name, data=None):
-    if not data:
-        data = []
-
-    with open(file_name) as fin:
-        reader = csv.DictReader(fin)
-        for data_dict in reader:
-            state = data_dict.pop('State')
-
-            if state == 'US':
-                continue
-            if state not in states:
-                state = abbreviations[state]
-
-            for year, value in data_dict.items():
-                data.append((state, int(year), float(value)))
-
-    return data
-
-
 def main(raw_filepath, interim_filepath, output_filepath):
     prefix = {'raw': raw_filepath, 'interim': interim_filepath}
 
     dfs = []
     for field_name, directory, file_name in zip(FIELD_NAMES, DIRECTORIES, FILE_NAMES):
-        records = generate_records(f'{prefix[directory]}/{file_name}')
-        df = pd.DataFrame.from_records(records)
-        df.columns = ['State', 'Year', field_name]
+        df = pd.read_csv(f'{prefix[directory]}/{file_name}')
+        df = df[df['State'] != 'US']
+        df['State'] = df['State'].apply(lambda x: x if x in states else abbreviations[x])
+        df = df.melt(id_vars=['State'], var_name='Year', value_name=field_name)
         dfs.append(df)
 
     socioeconomic_df = reduce(lambda x, y: pd.merge(x, y, on=['State', 'Year']), dfs)
@@ -48,4 +28,4 @@ def main(raw_filepath, interim_filepath, output_filepath):
 
 
 if __name__ == '__main__':
-    main('../../data/raw', '../../data/interim','../../data/processed')
+    main('../../data/raw', '../../data/interim', '../../data/processed')
