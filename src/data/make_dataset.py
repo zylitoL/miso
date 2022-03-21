@@ -6,10 +6,11 @@ from dotenv import find_dotenv, load_dotenv
 
 import preprocess_income
 import preprocess_populations
-import preprocess_model_sales
 import preprocess_state_sales
 
 import generate_state_year
+import generate_model_sales
+import generate_miso_load
 
 
 @click.command()
@@ -25,12 +26,18 @@ def main(input_filepath, interim_filepath, output_filepath):
     logger.info('Preprocessing data')
     preprocess_args = (input_filepath, interim_filepath)
 
-    preprocessors = [preprocess_income, preprocess_model_sales, preprocess_populations, preprocess_state_sales]
+    preprocessors = [preprocess_income, preprocess_populations, preprocess_state_sales]
     for preprocessor in preprocessors:
         preprocessor.main(*preprocess_args)
 
     logger.info('Generating socioeconomic data')
     generate_state_year.main(input_filepath, interim_filepath, output_filepath)
+
+    logger.info('Generating EV model sale data')
+    generate_model_sales.main(input_filepath, output_filepath)
+
+    logger.info('Generating MISO load data')
+    generate_miso_load.main(input_filepath, output_filepath)
 
 
 if __name__ == '__main__':
@@ -44,4 +51,4 @@ if __name__ == '__main__':
     # load up the .env entries as environment variables
     load_dotenv(find_dotenv())
 
-    main()
+    main.callback('../../data/raw', '../../data/interim', '../../data/processed')
