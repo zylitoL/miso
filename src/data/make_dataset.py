@@ -9,7 +9,7 @@ import preprocess_populations
 import preprocess_model_sales
 import preprocess_state_sales
 
-import generate_socioeconomic
+import generate_state_year
 
 
 @click.command()
@@ -30,7 +30,7 @@ def main(input_filepath, interim_filepath, output_filepath):
         preprocessor.main(*preprocess_args)
 
     logger.info('Generating socioeconomic data')
-    generate_socioeconomic.main(input_filepath, interim_filepath, output_filepath)
+    generate_state_year.main(input_filepath, interim_filepath, output_filepath)
 
 
 if __name__ == '__main__':
