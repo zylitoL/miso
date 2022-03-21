@@ -22,7 +22,7 @@ def process_model_rows(s):
     # if a '-' entry is between the left and right cutoffs, we assume missing data
     s = [
         float(x.replace(',', '')) if x != '-'
-        else (0 if i < left or i > right else None)
+        else (0 if i < left or i > right else -1)
         for i, x in enumerate(s)
     ]
 
@@ -74,9 +74,11 @@ def main(input_filepath, output_filepath):
 
     model_df = pd.concat([hev_df, pev_df])
     model_df = model_df[['Type'] + [str(x) for x in range(1999, 2019 + 1)]]
+    model_df = model_df.fillna(0)
+    model_df = model_df.replace(-1, None)
 
     model_df.to_csv(f'{output_filepath}/model_sales.csv')
 
 
 if __name__ == '__main__':
-    main('../../data/raw', '../../data/interim')
+    main('../../data/raw', '../../data/processed')
